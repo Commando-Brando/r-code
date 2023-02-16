@@ -1,0 +1,227 @@
+---
+title: "Assignment 2"
+author: "Brandon Muller"
+date: "`r Sys.Date()`"
+output: openintro::lab_report
+---
+
+```{r load-packages, message=FALSE}
+library(tidyverse)
+library(openintro)
+library(ISLR2)
+```
+
+### Question 2
+
+**Carefully explain the differences between the KNN classifier and KNN regression methods.**
+
+The difference between the KNN classifier and the KNN regression is how they each make predictions. KNN Classifier is used for classification problems, it finds k-nearest points in the training data and it *classifies* based on the majority class. KNN Regression makes predictions with the same k-nearest method but instead of classifying anything it predicts by using the average value instead of majority class.
+
+
+### Question 9
+
+**This question involves the use of multiple linear regression on the Auto data set.**
+
+**(9a) Produce a scatterplot matrix which includes all of the variables in the data set**
+```{r 9a}
+
+Auto <- read.csv('Auto.csv')
+plot(Auto)
+
+```
+
+**(9b) Compute the matrix of correlations between the variables using the function cor() . You will need to exclude the name variable, cor() which is qualitative.**
+```{r 9b}
+
+quan_auto <- Auto
+quan_auto$horsepower = NULL
+quan_auto$name = NULL
+cor(quan_auto)
+
+```
+
+**(9c) Use the lm() function to perform a multiple linear regression with mpg as the response and all other variables except name as the predictors. Use the summary() function to print the results. Comment on the output. For instance:**
+
+```{r 9c}
+
+lm.fit = lm(Auto$mpg ~ . - name - horsepower, data=Auto)
+summary(lm.fit)
+
+```
+
+We can see lots of stars on the right of the p-values which seem to indicate possible associations since those p-values are all less than 0.05. I also removed horsepower since it is a qualitative variable.
+
+**(9cii) Is there a relationship between the predictors and the response?**
+
+MPG, the response variable, has a minimum of one association with a predictor because it has a low p-value, at 2.2e-16, for the F-Test statistic. 
+
+**(9cii) Which predictors appear to have a statistically significant relationship to the response?**
+
+Displacement, weight, acceleration, year, and origin all have p-values below 0.05 which indicate that they are the predictors that that have an association with the response variable.
+
+**(9ciii) What does the coefficient for the year variable suggest?**
+
+It suggests that each time the variable year increases by one unit or one year there is an average change of MPG by 7.703e-01 units or miles per gallon given that other predictor values are constant.
+
+**(9d) Use the plot() function to produce diagnostic plots of the linear regression fit. Comment on any problems you see with the fit. Do the residual plots suggest any unusually large outliers? Does the leverage plot identify any observations with unusually high leverage?**
+
+```{r 9d}
+
+par(mfrow=c(2,2))
+plot(lm.fit)
+summary(influence.measures(lm.fit))
+
+```
+
+Looking at the "Residuals vs Leverage" plot we see a point labeled "14" that has possibly high leverage relative to all other points. This could indicate that this data point is more significant but it could just be a higher leveraged point that is not statistically significant since the leverage is not necessarily extreme given the scale. Viewing the "Residuals vs Fitted" plot it looks like there could be outliers. Point 323 has higher residual error than others but still does not seem to be too much so I cannot say it is outright a outlier but possible.
+
+**(9e) Use the * and : symbols to fit linear regression models with interaction effects. Do any interactions appear to be statistically significant?**
+
+```{r 9e}
+
+interactions1 <- lm(mpg ~ weight*year - name - horsepower, data=Auto)
+interactions2 <- lm(mpg ~ year*origin - name - horsepower, data=Auto)
+interactions3 <- lm(mpg ~ displacement:I(acceleration^2) - name - horsepower, data=Auto)
+summary(interactions1)
+summary(interactions2)
+summary(interactions3)
+
+```
+
+I created 3 models to see if any interactions appear to be statistically significant. 
+
+My first used an interaction between the variables weight and year which were 2 of the lower p-value predictors. Upon inspection of their interaction we find that the F-test has a corresponding p-value of 2.2e-16. Year has a much lower p-value than weight does which suggests that year is the statistically significant predictor in this model.
+
+The second test used an interaction between year and origin and also yielded the same F-test p-value of 2.2e-16. Once again the p-value of year was extremely low and much lower than the other predictor, origin, which supports my first test in indicating that year is a statistically significant predictor.
+
+The last test I did used an interaction between displacement and acceleration squared. This also appears statistically significant since it has a 2.2e-16 p-value indicating that there are multiple statistically significant predictors and not just year.
+
+**(9f) Try a few different transformations of the variables, such as log(X), √X, X 2 . Comment on your findings.**
+
+```{r 9f}
+
+logm <- lm(log(mpg) ~ weight*year - name - horsepower, data=Auto)
+sqrtm <- lm(mpg ~ year*sqrt(origin) - name - horsepower, data=Auto)
+p2m <- lm((mpg^2) ~ displacement:I(acceleration^2) - name - horsepower, data=Auto)
+summary(logm)
+summary(sqrtm)
+summary(p2m)
+
+```
+
+Here I apply the 3 transformations to the response variables of models copied after my previous 3.
+
+By taking the log of MPG for the first model we see that we have an about 4% increase in the Multiple R-squared percentage which indicates that now 87% of our data can be exlpained by our model.
+
+I tried taking the square root of each predictor and the response variables in 3 separate attempts for the 2nd model but each one did not yield an improved result. Each one slightly increased the p-value's of the predictors slightly and lowered the Multiple R-squared percentage by 1-2%. I left only the origin being squared for the final submission.
+
+For the 3rd model I squared the response variable. This yielded a an overall 4% decrease in the Multiple R-squared percentage but slightly decreased the p-value of the interaction predictor by about 0.02. 
+
+
+### Question 10
+
+**This question should be answered using the Carseats data set.**
+
+**(10a) Fit a multiple regression model to predict Sales using Price, Urban, and US**
+
+```{r 10a}
+
+data(Carseats)
+lm.fit2 <- lm(Sales ~ Price+Urban+US, data=Carseats)
+summary(lm.fit2)
+
+```
+
+**(10b) Provide an interpretation of each coefficient in the model. Be careful—some of the variables in the model are qualitative!**
+
+The price coefficient can be interpreted as showing that on average with a one unit increase in sales that the price decreases at a rate of about -0.054459 units. 
+Urban is a qualitative variable that indicates whether a store is in an urban or rural location. The summary shows that on average with a one unit increase in sales there is a decrease of yes to Urban of about -0.021916 units. Its high p-value indicates that it does not have a relationship with sales.
+The US variables is also qualitative representing if a store is in the US. With a unit increase in sales we can see about a 1.200573 increase in unit sales in a US store.
+
+**(10c) Write out the model in equation form, being careful to handle the qualitative variables properly.**
+
+Sales = 13.043469 - 0.054459 * Price - 0.021916 * Urban + 1.200573 * US + ε
+
+**(10d) For which of the predictors can you reject the null hypothesis H 0 : β j = 0?**
+
+We can reject the null hypothesis for Price and UrbanYes because they both show low p-values below 0.05
+
+**(10e) On the basis of your response to the previous question, fit a smaller model that only uses the predictors for which there is evidence of association with the outcome.**
+
+```{r 10e}
+
+lm.fit3 <- lm(Sales ~ Price+US, data=Carseats)
+summary(lm.fit3)
+
+```
+
+**(10f) How well do the models in (a) and (e) fit the data?**
+
+```{r 10f}
+
+anova(lm.fit2, lm.fit3)
+summary(lm.fit2)
+summary(lm.fit3)
+
+```
+
+Comparing the models using `anova` and `summary` we can see that the residual error difference is only different by 1 unit and there was a tiny increase in the RSS r squared metric. The summary show that both models how about the same Multiple R-squared values and p-values. I would say overall both do not fit the data well since their Multiple R-squared value is only 0.2393.
+
+**(10g) Using the model from (e), obtain 95 % confidence intervals for the coefficient(s).**
+
+```{r 10g}
+
+confint(lm.fit3)
+
+```
+
+**(10h) Is there evidence of outliers or high leverage observations in the model from (e)?**
+
+```{r 10h}
+
+plot(lm.fit3)
+plot(predict(lm.fit3), residuals(lm.fit3))
+plot(hatvalues(lm.fit3))
+
+```
+I think there are no statistically significant high leverage points given that our highest leverage point is only between 0.04 and 0.05 as seen in the "Residuals vs Leverage" plot. Between 2 and 3 there are a few points that possibly might be outliers but it is not clear from the plots.
+
+### Question 12
+
+This problem involves simple linear regression without an intercept.
+
+**(12a) Recall that the coefficient estimate ˆβ for the linear regression of Y onto X without an intercept is given by (3.38). Under what circumstance is the coefficient estimate for the regression of X onto Y the same as the coefficient estimate for the regression of Y onto X?**
+
+Since the X and Y values in the numerator of the formula shown on the (3.38) figure are interchangeable as per the commutative property the only thing that must be the same is the value in the denominator. Therefore, the coefficient estimates can be the same when the sum of the all the squared X values are equal to the sum of all Y values.
+
+**(12b) Generate an example in R with n = 100 observations in which the coefficient estimate for the regression of X onto Y is different from the coefficient estimate for the regression of Y onto X.**
+
+```{r 12b}
+
+x <- rnorm(100)
+y <- rnorm(100)
+
+lmx <- lm(y ~ x)
+lmy <- lm(x ~ y)
+
+summary(lmx)
+summary(lmy)
+
+
+```
+
+**(12c) Generate an example in R with n = 100 observations in which the coefficient estimate for the regression of X onto Y is the same as the coefficient estimate for the regression of Y onto X.**
+
+```{r 12c}
+
+x <- rnorm(100)
+y <- sample(x)
+
+lmx <- lm(y ~ x)
+lmy <- lm(x ~ y)
+
+summary(lmx)
+summary(lmy)
+
+
+```

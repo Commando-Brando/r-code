@@ -1,0 +1,80 @@
+---
+title: "Writing Functions"
+author: "Brandon Muller"
+date: "`r Sys.Date()`"
+output: openintro::lab_report
+---
+
+```{r load-packages, message=FALSE}
+library(tidyverse)
+library(openintro)
+```
+
+### Exercise 1
+
+Use the intrinsic R functions sd() and mean() to define a CV() function. Give your function the default parameter name="coefficient of variation", and provide for ellipsis parameters. Test your function against data with a known outcome, e.g simulated exponential data
+
+```{r E1, warning=FALSE, message=FALSE}
+CV <- function(name="Coefficient of Variation", ...) {
+  cv <- sd(...) / mean(...)
+  names(cv) <- name
+  return (cv)
+}
+
+CV(rexp(1000, rate=2), name="is this value close to 1.0?")
+```
+
+Every time I run it I get a different number but they are all close to 1.0. I looked into the functions and found the `rexp()` function is used to simulate a set of random numbers drawn from the exponential distribution which explains the randomness.  
+
+### Exercise 2
+
+Test the function with a canned dataset, e.g. LakeHuron or sunspot.month. Use the name parameter to label each estimate with a meaningful name (Use the R ? help feature to get descriptions.)
+
+```{r E2, warning=FALSE, message=FALSE}
+
+data("LakeHuron")
+CV(name="Coefficient of Variation of Lake Huron", LakeHuron)
+
+```
+
+This coefficient of variation seems kind of low to me, it makes sense that a lake to me might not have many outliers and all the water is pretty compact together in the body of the lake.
+
+### Exercise 3
+
+Compare the CV’s for two uniform random samples, runif(1000, min=0, max=1) and runif(1000, min=0, max=10). Are they markedly different? If so, how?
+
+```{r E3, warning=FALSE, message=FALSE}
+CV(name="Uniform Random Sample 1", runif(1000, min=0, max=1))
+CV(name="Uniform Random Sample 2", runif(1000, min=0, max=10))
+```
+
+The uniform random samples do not seem markedly different to me, they appear to be close with about a 0.02 difference.
+
+### Exercise 4
+
+Compare the CV’s for two Gaussian random samples rnorm(1000, mean=10, sd=2) and rnorm(1000, mean=5, sd=2). Are they markedly different? If so, how?
+
+```{r E4, warning=FALSE,message=FALSE}
+
+CV(name="Gaussian Random Sample 1", rnorm(1000, mean=10, sd=2))
+CV(name="Gaussian Random Sample 2", rnorm(1000, mean=5, sd=2))
+
+```
+
+The Gaussian samples appear to be markedly different, that difference being about 0.20. 
+
+### Exercise 5
+
+Compare the CV’s for two gamma random samples, rgamma(1000, shape=3, rate=1) and rgamma(1000, shape=6, rate=1). Are they markedly different? If so, how?
+
+```{r E5, warning=FALSE, message=FALSE}
+
+CV(name="Gamma Random Sample 1", rgamma(1000, shape=3, rate=1))
+CV(name="Gamma Random Sample 2", rgamma(1000, shape=6, rate=1))
+
+```
+
+There gamma samples appear to be markedly different to me with a difference of about 0.17.
+
+
+

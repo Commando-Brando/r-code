@@ -1,0 +1,107 @@
+---
+title: "Palmer Penguins"
+author: "Brandon Muller"
+date: "`r Sys.Date()`"
+output: openintro::lab_report
+---
+
+```{r load-packages, message=FALSE}
+library(tidyverse)
+library(openintro)
+library(palmerpenguins)
+```
+
+### Exercise 1
+
+Are there any missing values in the penguins data frame? If so, filter the data frame with the drop_na() function and save the result as the data frame OKpenguins. Then check OKpenguins for missing values to be sure you removed them all,
+
+As seen by the output below there were 19 rows in the data frame that had incomplete values.
+
+```{r Exercise1, warning=FALSE, message=FALSE}
+sum(is.na(penguins))
+
+penguins %>%
+  drop_na() -> OKpenguins
+
+sum(is.na(OKpenguins))
+```
+
+### Exercise 2
+
+What are the means and standard deviations of the penguins’ bill_length_mm and bill_depth_mm, by species? Show summary statistics and the appropriate boxplots. For completeness, also calculate the count for each species with the n=n() function in your summarize() step.
+
+
+We can see the means and standard deviations in the summary and box plots in the output. Looks like there is some decent consistency and clear mean and standard deviation distinctions between the species except for the Chinstrap having each characteristic in similar ranges to the two other species.
+
+```{r Exercise2, warning=FALSE, message=FALSE}
+OKpenguins %>%
+  group_by(species) %>%
+  summarize(mean.bl=mean(bill_length_mm), sd.bl=sd(bill_length_mm), 
+            mean.bd=mean(bill_depth_mm), sd.bd=sd(bill_depth_mm),
+            n=n()) %>%
+  print.data.frame(., digits=3)
+
+ggplot(OKpenguins, aes(x=species, y=bill_length_mm, fill=species)) +
+  geom_boxplot(outlier.colour = "blue", outlier.size=2) +
+  geom_jitter(width=0.2) +                                 
+  labs(title="Penguin Bill Lengths") +
+  theme_light()
+
+ggplot(OKpenguins, aes(x=species, y=bill_depth_mm, fill=species)) +
+  geom_boxplot(outlier.colour = "blue", outlier.size=2) +
+  geom_jitter(width=0.2) +                                 
+  labs(title="Penguin Bill Depths") +
+  theme_light()
+
+```
+
+### Exercise 3
+
+Display a graphic showing the number of penguins of each species. Use a graphic of your choice.
+
+Looks like there is around double as many Adelie than Chinstrap penguins. Due to the bigger sample of Adelie we should have more accurate information on them.
+
+```{r Exercise3, warning=FALSE, message=FALSE}
+ggplot(data=OKpenguins, aes(species)) +
+      geom_bar(aes(fill=species)) +
+      labs(title="Brandon's Penguin Sample, by Species") +
+      theme_classic()
+
+```
+
+### Exercise 4
+
+It seems reasonable to think that bill_length_mm and bill_depth_mm might be associated, as might flipper_length_mm and body_mass_g. Calculate the correlation between these two pairs of variables, by species.
+
+In the output I do not think there is a strong relationship for all three species since there is only once magnitude greater than 0.7. I think there might be greater magnitudes correlating to body mass and sex at least within a species.
+
+```{r Exercise4, warning=FALSE, message=FALSE}
+OKpenguins %>%
+  group_by(species) %>%
+  summarize(billlength.width=cor(bill_length_mm, bill_depth_mm), flipper.bmass=cor(flipper_length_mm, body_mass_g))  %>%
+  print.data.frame(., digits=3)
+
+```
+
+### Exercise 5
+
+Numerical correlations are nice, but nothing speaks like a picture. Plot each pair of variables from the previous question as a scatterplot to get a visual idea of the relationship.
+
+```{r Exercise5, warning=FALSE, message=FALSE}
+ggplot(OKpenguins, aes(x=bill_length_mm, y=bill_depth_mm) ) +
+  geom_point( aes(colour=species), size=2.5 ) +        
+  labs(title="Bill Length Depth Correlation") + 
+  theme_light()
+
+ggplot(OKpenguins, aes(x=flipper_length_mm, y=body_mass_g) ) +
+  geom_point( aes(colour=species), size=2.5 ) +        
+  labs(title="Flipper Length Body Mass Correlation") + 
+  theme_light()
+
+```
+
+### Exercise 6
+
+Classification algorithms work on the idea of “clustering,” where different groups are concentrated in different regions of a graph of variable values. Is there any clear concentration of the 3 penguin species in the bill_length_mm vs bill_depth_mm scatterplot? (no additional computation needed here, just look and think)
+
+Yes I think there is clear concentrations here, most of each species are concentrated closely together. There is minor overlap between the Chinstrap and the other species but the data is clustered. Even if it may not be apparent to someone if you contrast it to the other scatterplot there is not clear cluster different between the Chinstrap and Adelie.

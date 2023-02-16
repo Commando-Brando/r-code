@@ -1,0 +1,169 @@
+---
+title: "Assignment 3"
+author: "Brandon Muller"
+date: "`r Sys.Date()`"
+output: openintro::lab_report
+---
+
+```{r load-packages, message=FALSE}
+library(tidyverse)
+library(openintro)
+library(ISLR2)
+library(MASS)
+```
+
+### Question 13
+
+**This question should be answered using the Weekly data set, which is part of the ISLR2 package. This data is similar in nature to the Smarket data from this chapter’s lab, except that it contains 1,089 weekly returns for 21 years, from the beginning of 1990 to the end of 2010.**
+
+
+**(a) Produce some numerical and graphical summaries of the Weekly data. Do there appear to be any patterns?**
+
+```{r 13a}
+data("Weekly")
+
+summary(Weekly)
+cor(Weekly [,-9])
+pairs(Weekly)
+```
+After analyzing the summaries and pairs scatter plots matrix the only correlation I see is what appears to be a linear association between Volume and Year. The Cor() function output shows that Volume and Year have a correlation value of *0.84*.
+
+**b) Use the full data set to perform a logistic regression with Direction as the response and the five lag variables plus Volume as predictors. Use the summary function to print the results. Do any of the predictors appear to be statistically significant? If so, which ones?**
+
+```{r 13b}
+
+logreg.fits = glm(Direction~Lag1+Lag2+Lag3+Lag4+Lag5+Volume, data=Weekly, family=binomial)
+summary(logreg.fits)
+
+```
+
+Our model shows a p-value lower than .05 for Lag2 which indicates possible statistical significance. Its positive coefficient value suggests that if the week 2 weeks prior to the current week had a positive return then it is likely to go up this week. 0.0296 is the p-value which is not that far from the 0.05 threshold and I do not believe there is clear evidence of a real association between Lag2 and Direction.
+
+**c) Compute the confusion matrix and overall fraction of correct predictions. Explain what the confusion matrix is telling you about the types of mistakes made by logistic regression.**
+
+```{r 13c1}
+
+logreg.probs <- predict(logreg.fits, type="response")
+logreg.pred <- rep("Down", 1089)
+logreg.pred[logreg.probs > 0.5] = "Up"
+table(logreg.pred, Weekly$Direction)
+
+```
+
+```{r 13c2}
+
+# Percentage of average amount of prediction success
+mean(logreg.pred == Weekly$Direction)
+
+# Percentage of average amount of prediction failure
+mean(logreg.pred != Weekly$Direction)
+
+# Faction of times model predicted "UP" correctly
+557/(48+557)
+#Fraction of times model predicted "DOWN" correctly
+54/(430+54)
+
+```
+
+Here we can see that on average the logistic regression model predicted about 56% of the time, therefore incorrectly about 44% of the time. If we calculate the individual accuracies for "UP and "DOWN we can see that the model correctly predicted that a week was "UP" about 92% of the time but only correctly predicted "DOWN" about 11% of the time. This tells us our model is good at predicting "UP" but not "DOWN" and balance out at at 56% average rate of correctness. 
+
+**d) Now fit the logistic regression model using a training data period from 1990 to 2008, with Lag2 as the only predictor. Compute the confusion matrix and the overall fraction of correct predictions for the held out data (that is, the data from 2009 and 2010).**
+
+```{r 13d}
+
+train <- (Weekly$Year < 2009) # creates vector of TRUE/FALSE based on the year
+weeklyTest <- Weekly[!train,] # creates subset of the Weekly data set containing only data from 2009-2010
+direction.test <- Weekly$Direction[!train] # gets all the direction (our response var) for 2009-2010 to be used for our confusion matrix 
+logreg2.fits <- glm(Direction~Lag2, data=Weekly, subset=train, family=binomial)
+
+logreg2.probs <- predict(logreg2.fits, weeklyTest, type="response")
+logreg2.pred <- rep("Down", nrow(weeklyTest))
+logreg2.pred[logreg2.probs>0.5] <- "Up"
+
+table(logreg2.pred, direction.test)
+mean(logreg2.pred == direction.test)
+mean(logreg2.pred != direction.test)
+
+```
+
+Using on the Lag2 predictor and using a training data set (1990-2008) and testing data set (2009-2010) we can we have an improved average rate of about 63% for predicting the direction of the stock market on a given week.
+
+**e) Repeat (d) using LDA**
+
+```{r 13e}
+
+ldaWeekly.fits <- lda(Direction~Lag2, data=Weekly, subset=train)
+ldaWeekly.pred <- predict(ldaWeekly.fits, weeklyTest)
+ldaWeekly.class <- ldaWeekly.pred$class
+
+table(ldaWeekly.class, direction.test)
+mean(ldaWeekly.class == direction.test)
+mean(ldaWeekly.class != direction.test)
+
+```
+  
+With the LDA model using on the Lag2 predictor and using a training data set (1990-2008) and testing data set (2009-2010) we can we have an average rate of about 63% for predicting the direction of the stock market on a given week. This is the exact same values as the Logistical Regression model which is very surprising.
+
+**f) Repeat (d) using QDA.**
+
+```{r 13f}
+
+qdaWeekly.fits <- qda(Direction~Lag2, data=Weekly, subset=train)
+qdaWeekly.pred <- predict(qdaWeekly.fits, weeklyTest)
+qdaWeekly.class <- qdaWeekly.pred$class
+
+table(qdaWeekly.class, direction.test)
+mean(qdaWeekly.class == direction.test)
+mean(qdaWeekly.class != direction.test)
+
+```
+
+
+
+**g) Repeat (d) using KNN with K = 1**
+
+
+**h) Repeat (d) using naive Bayes.**
+
+
+**i) Which of these methods appears to provide the best results on this data?**
+
+
+**j) Experiment with different combinations of predictors, including possible transformations and interactions, for each of the methods. Report the variables, method, and associated confusion matrix that appears to provide the best results on the held out data. Note that you should also experiment with values for K in the KNN classifier.**
+
+
+
+### Question 14
+
+**In this problem, you will develop a model to predict whether a given car gets high or low gas mileage based on the Auto data set**
+
+
+**a) Create a binary variable, mpg01 , that contains a 1 if mpg contains a value above its median, and a 0 if mpg contains a value below its median. You can compute the median using the median() function. Note you may find it helpful to use the data.frame() function to create a single data set containing both mpg01 and the other Auto variables.**
+
+
+**b) Explore the data graphically in order to investigate the association between mpg01 and the other features. Which of the other features seem most likely to be useful in predicting mpg01? Scat- terplots and boxplots may be useful tools to answer this question. Describe your findings.**
+
+
+**c) Split the data into a training set and a test set.**
+
+
+**d) Perform LDA on the training data in order to predict mpg01 using the variables that seemed most associated with mpg01 in (b). What is the test error of the model obtained?**
+
+
+**e) Perform QDA on the training data in order to predict mpg01 using the variables that seemed most associated with mpg01 in (b). What is the test error of the model obtained?**
+
+
+**f) Perform logistic regression on the training data in order to predict mpg01 using the variables that seemed most associated with mpg01 in (b). What is the test error of the model obtained?**
+
+
+**g) Perform naive Bayes on the training data in order to predict mpg01 using the variables that seemed most associated with mpg01 in (b). What is the test error of the model obtained?**
+
+
+**h) Perform KNN on the training data, with several values of K, in order to predict mpg01 . Use only the variables that seemed most associated with mpg01 in (b). What test errors do you obtain? Which value of K seems to perform the best on this data set?**
+
+
+### Question 16
+
+**Using the Boston data set, fit classification models in order to predict whether a given census tract has a crime rate above or below the median. Explore logistic regression, LDA, naive Bayes, and KNN models using various subsets of the predictors. Describe your findings.**
+**Hint: You will have to create the response variable yourself, using the variables that are contained in the Boston data set.**
+
